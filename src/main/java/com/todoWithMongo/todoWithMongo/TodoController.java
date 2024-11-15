@@ -13,6 +13,10 @@ public class TodoController {
 @Autowired
 
 private TodoRepository todoRepo;
+@GetMapping("/")
+public String home() {
+	return "hello ";
+}
 @GetMapping("/todos")
 public ResponseEntity getAllTodos() {
 	List<TodoDTO> todos=todoRepo.findAll()	;
