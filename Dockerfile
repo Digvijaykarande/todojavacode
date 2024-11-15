@@ -1,27 +1,28 @@
-# Step 1: Use the official OpenJDK image as the base image
-FROM openjdk:17-jdk-slim AS build
+# Step 1: Use a Maven base image to build the application
+FROM maven:3.8.6-openjdk-17-slim AS build
 
-# Step 2: Set the working directory in the container
+# Step 2: Set the working directory
 WORKDIR /app
 
-# Step 3: Copy the pom.xml and download the dependencies (this layer will be cached)
+# Step 3: Copy the pom.xml and download the dependencies
 COPY pom.xml .
-RUN ./mvnw dependency:go-offline
+RUN mvn dependency:go-offline
 
-# Step 4: Copy the entire project
+# Step 4: Copy the entire project and build the application
 COPY . .
+RUN mvn clean package -DskipTests
 
-# Step 5: Package the application
-RUN ./mvnw clean package -DskipTests
-
-# Step 6: Use a smaller base image for running the application
+# Step 5: Use an OpenJDK runtime image for the final application
 FROM openjdk:17-jdk-slim
 
-# Step 7: Copy the jar file from the build stage
-COPY --from=build /app/target/todowithmongo-0.0.1-SNAPSHOT.jar /app/todowithmongo.jar
+# Set the working directory
+WORKDIR /app
 
-# Step 8: Expose the application port (optional, default is 8080)
+# Copy the JAR file from the build stage
+COPY --from=build /app/target/todoWithMongo-0.0.1-SNAPSHOT.jar /app/todoWithMongo.jar
+
+# Expose the port (optional)
 EXPOSE 8080
 
-# Step 9: Run the application
-ENTRYPOINT ["java", "-jar", "/app/todowithmongo.jar"]
+# Run the application
+CMD ["java", "-jar", "todoWithMongo.jar"]
